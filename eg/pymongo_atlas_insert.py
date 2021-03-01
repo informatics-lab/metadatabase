@@ -4,7 +4,7 @@ import os
 
 import pymongo
 
-from mongodb.client import Client
+from metadatabase.client import Client
 
 
 def absolute_path_walker(path):
