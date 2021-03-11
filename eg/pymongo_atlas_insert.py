@@ -29,5 +29,7 @@ if __name__ == "__main__":
     import sys
     mongodb_pw = str(sys.argv[1])
     data_dir = str(sys.argv[2])
+    db_name = str(sys.argv[3])
+    collection_name = str(sys.argv[4])
 
-    main(mongodb_pw, data_dir)
+    main(mongodb_pw, data_dir, db_name, collection_name)

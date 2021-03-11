@@ -259,7 +259,7 @@ class CubeMetaToJSON(object):
         return f"{name}{ext}"
 
     def save(self, filename):
-        for i, jsoniser in self._jsonisers:
+        for i, jsoniser in enumerate(self._jsonisers):
             cube_filename = self._handle_filename(filename, i)
             jsoniser.save(cube_filename)
 
