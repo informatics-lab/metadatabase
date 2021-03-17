@@ -55,7 +55,7 @@ class NCMLtoJSON(_JSONiser):
         return {"unit": unit["value"],
                 "calendar": None}  # NCML doesn't contain calendar metadata.
 
-    def _basic_attrs(self, d, obj):
+    def _handle_basic_attrs(self, d, obj):
         # We can get the var_name from the name attribute of the data var itself.
         d["var_name"] = obj.attrib["name"]
         # Pre-populate expected keys with None values and overwrite from children.
@@ -72,6 +72,18 @@ class NCMLtoJSON(_JSONiser):
                 unit_dict = self._handle_units(child.attrib)
                 d["units"] = unit_dict
 
+        return d
+
+    def _basic_attrs(self, d, objs):
+        if len(objs) == 1:
+            d = self._handle_basic_attrs(d, objs[0])
+        else:
+            result = {}
+            for obj in objs:
+                var_name = obj.attrib["name"]
+                var_basic_attrs = self._handle_basic_attrs({}, obj)
+                result[var_name] = var_basic_attrs
+            d["datasets"] = result
         return d
 
     def _get_coord_dims(self, coord, dim_coords=False):
@@ -108,25 +120,36 @@ class NCMLtoJSON(_JSONiser):
 
         # Find dimensions.
         dims_tagname = self.construct_tag("dimension")
-        dimension_names = [child.attrib["name"] for child in dims_childs]
+        dims_childs = xml_root.findall(dims_tagname)
+        self._dim_coords = [child.attrib["name"] for child in dims_childs]
+        print(f"dimension names: {self._dim_coords}")
 
         # Find variables.
         vars_tagname = self.construct_tag("variable")
         vars_childs = xml_root.findall(vars_tagname)
 
         # The data variable is the variable not in the list of dimensions.
+        data_vars = []
         for var in vars_childs:
             if var.attrib["name"] not in dimension_names:
-                data_var = var
+                data_vars.append(var)
+        data_var_names = [dv.attrib["name"] for dv in data_vars]
+        print(data_var_names)
 
         # Find dimension coordinates from the `shape` attribute of the data variable.
-        dim_coord_names = data_var.attrib["shape"].split(" ")
-        self._dim_coords = dim_coord_names
-        other_coord_names = list(set(dimension_names) - set(dim_coord_names) - set(data_var.attrib["name"]))
+        covered_dims = []
+        for data_var in data_vars:
+            print(data_var)
+            print(data_var.attrib["name"])
+            dim_names = data_var.attrib["shape"].split(" ")
+            covered_dims.extend(dim_names)
+        self._dim_coords = list(set(covered_dims))
+        other_coord_names = list(set(dimension_names) - set(self._dim_coords) - set(data_var_names))
 
         # Handle core metadata.
-        base_dict = {"mime_type": "nc"}
-        self.content_dict = self._basic_attrs(base_dict, data_var)
+        base_dict = {"mime_type": "nc",
+                     "dataset_ref": xml_root.attrib["location"]}
+        self.content_dict = self._basic_attrs(base_dict, data_vars)
 
         # Handle all coordinates.
         dim_coords_dict = {}
