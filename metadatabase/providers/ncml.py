@@ -1,5 +1,6 @@
 import json
 import os
+import warnings
 import xml.etree.ElementTree as ET
 
 from .core import _JSONiser
@@ -12,6 +13,11 @@ class NCMLtoJSON(_JSONiser):
         self._xml = None
         self._xmlns_attr = None
         self._dim_coords = None
+
+        warnings.warn(
+            "NcML handling is incomplete. "
+            "Your actual conversion mileage may vary, and "
+            "you may encounter errors during conversion.")
 
     @property
     def xml(self):
