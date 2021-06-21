@@ -47,11 +47,15 @@ class _JSONiser(object):
         """
         raise NotImplementedError
 
-    def save(self, filename):
+    def save(self, filename, itm=None):
         """Save the dict representation of `self.dataset` as a JSON file."""
+        if itm is None:
+            itm = self.content_dict
         with open(filename, 'w') as ojfh:
-            json.dump(self.content_dict, ojfh)
+            json.dump(itm, ojfh)
 
-    def dump_string(self):
+    def dump_string(self, itm=None):
         """Dump the cube dictionary as a JSON string."""
-        return json.dumps(self.content_dict)
+        if itm is None:
+            itm = self.content_dict
+        return json.dumps(itm)
